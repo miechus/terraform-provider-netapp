@@ -1,0 +1,13 @@
+{
+	"comment": "",
+	"ignore": "",
+	"package": [
+		{
+			"checksumSHA1": "KdRB7g6yTPK4/XxsWzX4am0WRlU=",
+			"path": "github.com/candidpartners/occm-sdk-go",
+			"revision": "689ff88ae2a6481743761b10f4751b52617d926b",
+			"revisionTime": "2017-10-20T03:42:55Z"
+		}
+	],
+	"rootPath": "github.com/miechus/terraform-provider-netapp"
+}
