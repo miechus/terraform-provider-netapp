@@ -18,6 +18,7 @@ func resourceCloudVolume() *schema.Resource {
 		Read:   resourceCloudVolumeRead,
 		Update: resourceCloudVolumeUpdate,
 		Delete: resourceCloudVolumeDelete,
+		Exists: resourceCloudVolumeExists,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -321,14 +322,14 @@ func buildVolumeModifyRequest(d *schema.ResourceData) *workenv.VolumeModifyReque
 }
 
 func buildVolumeTierChangeRequest(d *schema.ResourceData) *workenv.ChangeVolumeTierRequest {
-  var createAggregateIfNotFound bool
+	var createAggregateIfNotFound bool
 	if attr, ok := d.GetOkExists("create_aggregate_if_not_found"); ok {
 		createAggregateIfNotFound = attr.(bool)
 	} else {
 		createAggregateIfNotFound = true
 	}
 
-  req := workenv.ChangeVolumeTierRequest{
+	req := workenv.ChangeVolumeTierRequest{
 		AggregateName: d.Get("aggregate_name").(string),
 		NewAggregate:  createAggregateIfNotFound,
 	}
@@ -614,8 +615,8 @@ func resourceCloudVolumeRead(d *schema.ResourceData, meta interface{}) error {
 func resourceCloudVolumeUpdate(d *schema.ResourceData, meta interface{}) error {
 	apis := meta.(*APIs)
 
-  // NOTE: the create_aggregate_if_not_found attribute is not supported by the
-  // underlying NetApp API and therefore not used in the update call
+	// NOTE: the create_aggregate_if_not_found attribute is not supported by the
+	// underlying NetApp API and therefore not used in the update call
 
 	volumeType, workenvId, svmName, volumeName, isHA, err := splitId(d.Id())
 	if err != nil {
@@ -695,6 +696,39 @@ func resourceCloudVolumeDelete(d *schema.ResourceData, meta interface{}) error {
 	d.SetId("")
 
 	return nil
+}
+
+func resourceCloudVolumeExists(d *schema.ResourceData, meta interface{}) (bool, error) {
+	apis := meta.(*APIs)
+
+	volumeType, workenvId, _, volumeName, isHA, err := splitId(d.Id())
+	if err != nil {
+		return false, err
+	}
+
+	log.Printf("[INFO] Checking if %s volume %s for work env %s exists", strings.ToUpper(volumeType), volumeName, workenvId)
+
+	// get volume data
+	if isHA {
+		_, err = apis.AWSHAWorkingEnvironmentAPI.GetVolume(workenvId, volumeName)
+	} else {
+		_, err = apis.VSAWorkingEnvironmentAPI.GetVolume(workenvId, volumeName)
+	}
+
+	if err != nil {
+		if netappErr, ok := err.(error); ok {
+			if netappErr.Error() == workenv.ErrInvalidVolumeName {
+				log.Printf("[INFO] %s volume %s for work env %s does not exist", strings.ToUpper(volumeType), volumeName, workenvId)
+				return false, nil
+			}
+		}
+		log.Printf("[INFO] Error while reading %s volume %s for work env %s: %s", strings.ToUpper(volumeType), volumeName, workenvId, err)
+		return false, err
+	}
+
+	log.Printf("[INFO] %s volume %s for work env %s exists", strings.ToUpper(volumeType), volumeName, workenvId)
+
+	return true, nil
 }
 
 func updateVolumeData(d *schema.ResourceData, apis *APIs, volumeType, workenvId, svmName, volumeName string, isHA bool) error {
