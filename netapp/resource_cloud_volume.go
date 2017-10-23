@@ -682,7 +682,7 @@ func resourceCloudVolumeDelete(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[INFO] Deleting %s volume %s for work env %s", strings.ToUpper(volumeType), volumeName, workenvId)
 
-	var requestId string
+	var requestId string = ""
 	for i := 0; i < DELETE_VOLUME_AVAILABILITY_RETRY_COUNT; i++ {
 		if isHA {
 			requestId, err = apis.AWSHAWorkingEnvironmentAPI.DeleteVolume(workenvId, svmName, volumeName)
@@ -704,6 +704,10 @@ func resourceCloudVolumeDelete(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		time.Sleep(DELETE_VOLUME_WAIT_TIME)
+	}
+
+	if requestId == "" {
+		return errors.New(client.ErrResourceBusy)
 	}
 
 	if err := WaitForRequest(apis, requestId); err != nil {
