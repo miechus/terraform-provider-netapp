@@ -87,38 +87,6 @@ func TestAccCloudVolume_nfs_vsa_data_change(t *testing.T) {
 	})
 }
 
-func TestAccCloudVolume_nfs_vsa_tier_change(t *testing.T) {
-	var id *string
-
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckCloudVolumeDestroy,
-		Steps: []resource.TestStep{
-			resource.TestStep{
-				Config: testAccCloudVolume_nfs_vsa,
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudVolumeExists("netapp_cloud_volume.vsa-nfs-volume", id),
-					resource.TestCheckResourceAttr(
-						"netapp_cloud_volume.vsa-nfs-volume", "name", "vsa_nfs_vol"),
-					resource.TestCheckResourceAttr(
-						"netapp_cloud_volume.vsa-nfs-volume", "provider_volume_type", "gp2"),
-				),
-			},
-			resource.TestStep{
-				Config: testAccCloudVolume_nfs_vsa_tier_change,
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudVolumeExists("netapp_cloud_volume.vsa-nfs-volume", id),
-					resource.TestCheckResourceAttr(
-						"netapp_cloud_volume.vsa-nfs-volume", "name", "vsa_nfs_vol"),
-					resource.TestCheckResourceAttr(
-						"netapp_cloud_volume.vsa-nfs-volume", "provider_volume_type", "st1"),
-				),
-			},
-		},
-	})
-}
-
 func TestAccCloudVolume_nfs_awsha_basic(t *testing.T) {
 	var id *string
 
@@ -157,38 +125,6 @@ func TestAccCloudVolume_nfs_awsha_basic(t *testing.T) {
 						"netapp_cloud_volume.awsha-nfs-volume", "deduplication", "false"),
 					resource.TestCheckResourceAttr(
 						"netapp_cloud_volume.awsha-nfs-volume", "provider_volume_type", "st1"),
-				),
-			},
-		},
-	})
-}
-
-func TestAccCloudVolume_nfs_awsha_tier_change(t *testing.T) {
-	var id *string
-
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckCloudVolumeDestroy,
-		Steps: []resource.TestStep{
-			resource.TestStep{
-				Config: testAccCloudVolume_nfs_awsha,
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudVolumeExists("netapp_cloud_volume.awsha-nfs-volume", id),
-					resource.TestCheckResourceAttr(
-						"netapp_cloud_volume.awsha-nfs-volume", "name", "awsha_nfs_vol"),
-					resource.TestCheckResourceAttr(
-						"netapp_cloud_volume.awsha-nfs-volume", "provider_volume_type", "st1"),
-				),
-			},
-			resource.TestStep{
-				Config: testAccCloudVolume_nfs_awsha_tier_change,
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudVolumeExists("netapp_cloud_volume.awsha-nfs-volume", id),
-					resource.TestCheckResourceAttr(
-						"netapp_cloud_volume.awsha-nfs-volume", "name", "awsha_nfs_vol"),
-					resource.TestCheckResourceAttr(
-						"netapp_cloud_volume.awsha-nfs-volume", "provider_volume_type", "gp2"),
 				),
 			},
 		},
