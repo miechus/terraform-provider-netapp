@@ -121,6 +121,8 @@ func (client *Client) Invoke(method, uri string, qsParams map[string]string, bod
 		return nil, nil, errors.Errorf(ErrUnauthorized)
 	case http.StatusForbidden:
 		return nil, nil, errors.Errorf(ErrForbidden)
+  case http.StatusConflict:
+		return nil, nil, errors.Errorf(ErrResourceBusy)
 	default:
     if status >= 200 && status < 300 {
       // all 200 errors are allowed

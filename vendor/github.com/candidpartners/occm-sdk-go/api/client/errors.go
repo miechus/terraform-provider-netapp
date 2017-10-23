@@ -10,6 +10,7 @@ const (
   ErrForbidden = "Access forbidden"
   ErrInvalidHost = "Invalid host"
   ErrServerError = "Server error %s"
+  ErrResourceBusy = "Resource busy"
   ErrJSONConversion = "Error converting JSON"
   ErrCreatingHttpRequestForUri = "Error creating HTTP request for URI %s"
   ErrInvokingHttpRequestForUri = "Error invoking HTTP request for URI %s"
