@@ -4,13 +4,19 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"time"
 
+	"github.com/candidpartners/occm-sdk-go/api/client"
 	"github.com/candidpartners/occm-sdk-go/api/workenv"
 	"github.com/candidpartners/occm-sdk-go/api/workenv/vsa"
 	"github.com/candidpartners/occm-sdk-go/util"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/pkg/errors"
 )
+
+const DELETE_VOLUME_AVAILABILITY_RETRY_COUNT = 120
+const DELETE_VOLUME_WAIT_TIME = 5 * time.Second
 
 func resourceCloudVolume() *schema.Resource {
 	return &schema.Resource{
@@ -677,17 +683,30 @@ func resourceCloudVolumeDelete(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[INFO] Deleting %s volume %s for work env %s", strings.ToUpper(volumeType), volumeName, workenvId)
 
 	var requestId string
-	if isHA {
-		requestId, err = apis.AWSHAWorkingEnvironmentAPI.DeleteVolume(workenvId, svmName, volumeName)
-	} else {
-		requestId, err = apis.VSAWorkingEnvironmentAPI.DeleteVolume(workenvId, svmName, volumeName)
+	for i := 0; i < DELETE_VOLUME_AVAILABILITY_RETRY_COUNT; i++ {
+		if isHA {
+			requestId, err = apis.AWSHAWorkingEnvironmentAPI.DeleteVolume(workenvId, svmName, volumeName)
+		} else {
+			requestId, err = apis.VSAWorkingEnvironmentAPI.DeleteVolume(workenvId, svmName, volumeName)
+		}
+
+		if err != nil {
+			if netappErr := errors.Cause(err); netappErr != nil {
+				// only if the resource is busy, wait for it to finish processing
+				if netappErr.Error() == client.ErrResourceBusy {
+					log.Printf("[INFO] %s volume %s for work env %s is busy, waiting...", strings.ToUpper(volumeType), volumeName, workenvId)
+				} else {
+					return err
+				}
+			}
+		} else {
+			break
+		}
+
+		time.Sleep(DELETE_VOLUME_WAIT_TIME)
 	}
 
-	if err != nil {
-		return err
-	}
-
-	if err = WaitForRequest(apis, requestId); err != nil {
+	if err := WaitForRequest(apis, requestId); err != nil {
 		return err
 	}
 
