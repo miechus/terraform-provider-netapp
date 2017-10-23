@@ -5,8 +5,8 @@
 		{
 			"checksumSHA1": "KdRB7g6yTPK4/XxsWzX4am0WRlU=",
 			"path": "github.com/candidpartners/occm-sdk-go",
-			"revision": "689ff88ae2a6481743761b10f4751b52617d926b",
-			"revisionTime": "2017-10-20T03:42:55Z"
+			"revision": "9dabdb30433d505e4a12c897099fdf45f0584ab2",
+			"revisionTime": "2017-10-23T02:04:35Z"
 		}
 	],
 	"rootPath": "github.com/miechus/terraform-provider-netapp"
