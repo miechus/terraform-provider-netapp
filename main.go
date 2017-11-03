@@ -2,7 +2,7 @@ package main
 
 import (
 	"github.com/hashicorp/terraform/plugin"
-	"github.com/miechus/terraform-provider-netapp/netapp"
+	"github.com/terraform-providers/terraform-provider-netapp/netapp"
 )
 
 func main() {
