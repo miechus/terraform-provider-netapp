@@ -2,6 +2,7 @@ package netapp
 
 import (
 	"fmt"
+	"os"
 	"testing"
 
 	"github.com/hashicorp/terraform/helper/resource"
@@ -9,16 +10,17 @@ import (
 )
 
 func TestAccNetAppCloudWorkingEnvironmentDataSource(t *testing.T) {
+	envName := os.Getenv("NETAPP_AWSHA_WORKENV_NAME")
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: testAccNetAppCloudWorkingEnvironmentDataSource,
+				Config: fmt.Sprintf(testAccNetAppCloudWorkingEnvironmentDataSource, envName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWoringEnvironmentDataSourceID("data.netapp_cloud_workenv.aws-ha-env"),
 					resource.TestCheckResourceAttr(
-						"data.netapp_cloud_workenv.aws-ha-env", "name", "awshaenv"),
+						"data.netapp_cloud_workenv.aws-ha-env", "name", envName),
 				),
 			},
 		},
@@ -42,6 +44,6 @@ func testAccCheckWoringEnvironmentDataSourceID(n string) resource.TestCheckFunc 
 
 const testAccNetAppCloudWorkingEnvironmentDataSource = `
 data "netapp_cloud_workenv" "aws-ha-env" {
-        name = "awshaenv"
+        name = "%s"
 }
 `

@@ -40,4 +40,12 @@ func testAccPreCheck(t *testing.T) {
 	if v := os.Getenv("NETAPP_HOST"); v == "" {
 		t.Fatal("NETAPP_HOST must be set for acceptance tests")
 	}
+
+	if v := os.Getenv("NETAPP_VSA_WORKENV_NAME"); v == "" {
+		t.Fatal("NETAPP_VSA_WORKENV_NAME must be set for acceptance tests")
+	}
+
+	if v := os.Getenv("NETAPP_AWSHA_WORKENV_NAME"); v == "" {
+		t.Fatal("NETAPP_AWSHA_WORKENV_NAME must be set for acceptance tests")
+	}
 }

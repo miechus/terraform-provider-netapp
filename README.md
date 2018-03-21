@@ -50,7 +50,7 @@ $ $GOPATH/bin/terraform-provider-netapp
 
 In order to test the provider, you can simply run `make test`.
 
-*Note:* Make sure the `NETAPP_EMAIL`, `NETAPP_PASSWORD` and `NETAPP_HOST` variables are set.
+*Note:* Make sure the `NETAPP_EMAIL`, `NETAPP_PASSWORD`, `NETAPP_HOST`, `NETAPP_VSA_WORKENV_NAME` and `NETAPP_AWSHA_WORKENV_NAME` variables are set.
 
 ```sh
 $ make test
