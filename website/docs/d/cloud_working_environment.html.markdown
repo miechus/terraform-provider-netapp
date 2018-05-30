@@ -1,19 +1,19 @@
 ---
 layout: "netapp"
-page_title: "NetApp: netapp_cloud_workenv"
-sidebar_current: "docs-netapp-datasource-cloud-workenv"
+page_title: "NetApp: netapp_cloud_working_environment"
+sidebar_current: "docs-netapp-datasource-cloud-working-environment"
 description: |-
   Gets information about a working environment
 ---
 
-# netapp\_cloud\_workenv
+# netapp\_cloud\_working\_environment
 
 Use this data source to retrieve a working environment
 
 ## Example Usage
 
 ```hcl
-data "netapp_cloud_workenv" "vsa-workenv" {
+data "netapp_cloud_working_environment" "vsa-workenv" {
   name = "vsaenv"
 }
 

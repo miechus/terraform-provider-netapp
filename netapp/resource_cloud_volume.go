@@ -15,8 +15,13 @@ import (
 	"github.com/pkg/errors"
 )
 
-const DELETE_VOLUME_AVAILABILITY_RETRY_COUNT = 120
-const DELETE_VOLUME_WAIT_TIME = 5 * time.Second
+// number of attempts for deleting a volume
+// needed as sometimes the volumes are busy performing
+// other operations
+const DeleteVolumeAvailabilityRetryCount = 120
+
+// wait time before retrying volume deletion attempt
+const DeleteVolumeWaitTime = 5 * time.Second
 
 func resourceCloudVolume() *schema.Resource {
 	return &schema.Resource{
@@ -29,7 +34,7 @@ func resourceCloudVolume() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"workenv_id": {
+			"working_environment_id": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -196,9 +201,9 @@ func resourceCloudVolume() *schema.Resource {
 	}
 }
 
-func buildVolumeQuoteRequest(d *schema.ResourceData) *vsa.VSAVolumeQuoteRequest {
+func buildVolumeQuoteRequest(d *schema.ResourceData) (*vsa.VSAVolumeQuoteRequest, error) {
 	req := vsa.VSAVolumeQuoteRequest{
-		WorkingEnvironmentId: d.Get("workenv_id").(string),
+		WorkingEnvironmentId: d.Get("working_environment_id").(string),
 		SvmName:              d.Get("svm_name").(string),
 		Name:                 d.Get("name").(string),
 		Size: &workenv.Capacity{
@@ -235,18 +240,19 @@ func buildVolumeQuoteRequest(d *schema.ResourceData) *vsa.VSAVolumeQuoteRequest 
 
 	if attr, ok := d.GetOk("iops"); ok {
 		if d.Get("provider_volume_type").(string) != "io1" {
-			log.Printf("[INFO] IOPS only supported for io1 volume types, ignoring")
+			log.Printf("[ERROR] IOPS only supported for io1 volume types, ignoring")
+			return nil, fmt.Errorf("IOPS only supported for io1 volume types, found type: ", d.Get("provider_volume_type").(string))
 		} else {
 			req.IOPS = attr.(int)
 		}
 	}
 
-	return &req
+	return &req, nil
 }
 
 func buildVolumeCreateRequest(d *schema.ResourceData) *vsa.VSAVolumeCreateRequest {
 	req := vsa.VSAVolumeCreateRequest{
-		WorkingEnvironmentId: d.Get("workenv_id").(string),
+		WorkingEnvironmentId: d.Get("working_environment_id").(string),
 		SvmName:              d.Get("svm_name").(string),
 		AggregateName:        d.Get("aggregate_name").(string),
 		Name:                 d.Get("name").(string),
@@ -433,7 +439,7 @@ func parseShareInfo(d *schema.ResourceData) *workenv.CIFSShareInfo {
 func processVolumeResourceData(d *schema.ResourceData, res *workenv.VolumeResponse, workenvId string) error {
 	d.Set("name", res.Name)
 	d.Set("svm_name", res.SvmName)
-	d.Set("workenv_id", workenvId)
+	d.Set("working_environment_id", workenvId)
 	if _, ok := d.GetOk("aggregate_name"); ok {
 		// only set the aggregate name if it is explicitly provided in config
 		d.Set("aggregate_name", res.AggregateName)
@@ -499,14 +505,17 @@ func flattenShareInfo(info *workenv.CIFSShareInfo) map[string]interface{} {
 func resourceCloudVolumeCreate(d *schema.ResourceData, meta interface{}) error {
 	apis := meta.(*APIs)
 
-	workenvId := d.Get("workenv_id").(string)
+	workenvId := d.Get("working_environment_id").(string)
 	workenv, err := GetWorkingEnvironmentById(apis, workenvId)
 	if err != nil {
 		return err
 	}
 
 	// prepare volume quote first
-	quoteReq := buildVolumeQuoteRequest(d)
+	quoteReq, err := buildVolumeQuoteRequest(d)
+	if err != nil {
+		return err
+	}
 
 	log.Printf("[DEBUG] Requesting a quote for volume %s", quoteReq.Name)
 	log.Printf("[DEBUG] Quote request: %s", util.ToString(quoteReq))
@@ -621,6 +630,8 @@ func resourceCloudVolumeRead(d *schema.ResourceData, meta interface{}) error {
 func resourceCloudVolumeUpdate(d *schema.ResourceData, meta interface{}) error {
 	apis := meta.(*APIs)
 
+	d.Partial(true)
+
 	// NOTE: the create_aggregate_if_not_found attribute is not supported by the
 	// underlying NetApp API and therefore not used in the update call
 
@@ -683,7 +694,7 @@ func resourceCloudVolumeDelete(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[INFO] Deleting %s volume %s for work env %s", strings.ToUpper(volumeType), volumeName, workenvId)
 
 	var requestId string = ""
-	for i := 0; i < DELETE_VOLUME_AVAILABILITY_RETRY_COUNT; i++ {
+	for i := 0; i < DeleteVolumeAvailabilityRetryCount; i++ {
 		if isHA {
 			requestId, err = apis.AWSHAWorkingEnvironmentAPI.DeleteVolume(workenvId, svmName, volumeName)
 		} else {
@@ -703,7 +714,7 @@ func resourceCloudVolumeDelete(d *schema.ResourceData, meta interface{}) error {
 			break
 		}
 
-		time.Sleep(DELETE_VOLUME_WAIT_TIME)
+		time.Sleep(DeleteVolumeWaitTime)
 	}
 
 	if requestId == "" {
@@ -785,13 +796,16 @@ func updateVolumeTier(d *schema.ResourceData, meta interface{}, apis *APIs, volu
 	log.Printf("[INFO] Modifying tier for %s volume %s for work env %s", strings.ToUpper(volumeType), volumeName, workenvId)
 
 	// prepare volume quote first
-	quoteReq := buildVolumeQuoteRequest(d)
+	var err error
+	quoteReq, err := buildVolumeQuoteRequest(d)
+	if err != nil {
+		return err
+	}
 
 	log.Printf("[DEBUG] Requesting tier change quote for volume %s", quoteReq.Name)
 	log.Printf("[DEBUG] Quote request: %s", util.ToString(quoteReq))
 
 	// quote the volume creation
-	var err error
 	var quoteRes *vsa.VSAVolumeQuoteResponse
 	if isHA {
 		quoteRes, err = apis.AWSHAWorkingEnvironmentAPI.QuoteVolume(quoteReq)

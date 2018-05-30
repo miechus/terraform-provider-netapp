@@ -16,7 +16,7 @@ func TestAccNetAppCloudWorkingEnvironmentDataSource(t *testing.T) {
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: fmt.Sprintf(testAccNetAppCloudWorkingEnvironmentDataSource, envName),
+				Config: FormatString(testAccNetAppCloudWorkingEnvironmentDataSource, envName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWoringEnvironmentDataSourceID("data.netapp_cloud_workenv.aws-ha-env"),
 					resource.TestCheckResourceAttr(
@@ -43,7 +43,7 @@ func testAccCheckWoringEnvironmentDataSourceID(n string) resource.TestCheckFunc 
 }
 
 const testAccNetAppCloudWorkingEnvironmentDataSource = `
-data "netapp_cloud_workenv" "aws-ha-env" {
+data "netapp_cloud_working_environment" "aws-ha-env" {
         name = "%s"
 }
 `

@@ -18,13 +18,7 @@ func TestAccCloudVolume_nfs_import(t *testing.T) {
 		CheckDestroy: testAccCheckCloudVolumeDestroy,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: fmt.Sprintf(testAccCloudVolume_nfs_vsa, envName),
-			},
-
-			resource.TestStep{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				Config: FormatString(testAccCloudVolume_nfs_vsa, envName),
 			},
 		},
 	})
@@ -40,13 +34,7 @@ func TestAccCloudVolume_cifs_import(t *testing.T) {
 		CheckDestroy: testAccCheckCloudVolumeDestroy,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: fmt.Sprintf(testAccCloudVolume_cifs_vsa, envName),
-			},
-
-			resource.TestStep{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				Config: FormatString(testAccCloudVolume_cifs_vsa, envName),
 			},
 		},
 	})
