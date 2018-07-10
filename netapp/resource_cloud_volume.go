@@ -80,10 +80,12 @@ func resourceCloudVolume() *schema.Resource {
 			"initial_size": {
 				Type:     schema.TypeFloat,
 				Optional: true,
+				ForceNew: true,
 			},
 			"initial_size_unit": {
 				Type:     schema.TypeString,
 				Optional: true,
+				ForceNew: true,
 				ValidateFunc: validation.StringInSlice([]string{
 					"GB",
 					"TB",
@@ -115,7 +117,7 @@ func resourceCloudVolume() *schema.Resource {
 							Required: true,
 						},
 						"permission": {
-							Type:     schema.TypeList,
+							Type:     schema.TypeSet,
 							MinItems: 1,
 							Required: true,
 							Elem: &schema.Resource{
@@ -165,10 +167,12 @@ func resourceCloudVolume() *schema.Resource {
 			"max_num_disks_approved_to_add": {
 				Type:     schema.TypeInt,
 				Optional: true,
+				ForceNew: true,
 			},
 			"verify_name_uniqueness": {
 				Type:     schema.TypeBool,
 				Optional: true,
+				ForceNew: true,
 			},
 			"provider_volume_type": {
 				Type:     schema.TypeString,
@@ -184,18 +188,22 @@ func resourceCloudVolume() *schema.Resource {
 			"iops": {
 				Type:     schema.TypeInt,
 				Optional: true,
+				ForceNew: true,
 			},
 			"sync_to_s3": {
 				Type:     schema.TypeBool,
 				Optional: true,
+				ForceNew: true,
 			},
 			"capacity_tier": {
 				Type:     schema.TypeString,
 				Optional: true,
+				ForceNew: true,
 			},
 			"create_aggregate_if_not_found": {
 				Type:     schema.TypeBool,
 				Optional: true,
+				ForceNew: true,
 			},
 		},
 	}
@@ -529,7 +537,7 @@ func resourceCloudVolumeCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return err
+		return fmt.Errorf("Error submitting volume quote for work env %s: %s", workenvId, err)
 	}
 
 	log.Printf("[DEBUG] Quote response: %s", util.ToString(quoteRes))
@@ -575,11 +583,11 @@ func resourceCloudVolumeCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return err
+		return fmt.Errorf("Error creating volume for work env %s: %s", workenvId, err)
 	}
 
 	if err = WaitForRequest(apis, requestId); err != nil {
-		return err
+		return fmt.Errorf("Error waiting for volume creation for work env %s: %s", workenvId, err)
 	}
 
 	log.Printf("[INFO] Volume %s created successfully", quoteReq.Name)
@@ -597,10 +605,15 @@ func resourceCloudVolumeCreate(d *schema.ResourceData, meta interface{}) error {
 func resourceCloudVolumeRead(d *schema.ResourceData, meta interface{}) error {
 	apis := meta.(*APIs)
 
-	volumeType, workenvId, _, volumeName, isHA, err := splitId(d.Id())
+	volumeID, err := ParseVolumeID(d.Id())
 	if err != nil {
 		return err
 	}
+
+	volumeType := volumeID.VolumeType
+	workenvId := volumeID.WorkEnvId
+	volumeName := volumeID.VolumeName
+	isHA := volumeID.IsHA
 
 	log.Printf("[INFO] Reading %s volume %s for work env %s", strings.ToUpper(volumeType), volumeName, workenvId)
 
@@ -613,7 +626,7 @@ func resourceCloudVolumeRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return err
+		return fmt.Errorf("Error retrieving volume %s from work env %s: %s", volumeName, workenvId, err)
 	}
 
 	log.Printf("[DEBUG] Response: %s", util.ToString(res))
@@ -635,10 +648,16 @@ func resourceCloudVolumeUpdate(d *schema.ResourceData, meta interface{}) error {
 	// NOTE: the create_aggregate_if_not_found attribute is not supported by the
 	// underlying NetApp API and therefore not used in the update call
 
-	volumeType, workenvId, svmName, volumeName, isHA, err := splitId(d.Id())
+	volumeID, err := ParseVolumeID(d.Id())
 	if err != nil {
 		return err
 	}
+
+	volumeType := volumeID.VolumeType
+	workenvId := volumeID.WorkEnvId
+	svmName := volumeID.SvmName
+	volumeName := volumeID.VolumeName
+	isHA := volumeID.IsHA
 
 	log.Printf("[INFO] Updating %s volume %s for work env %s", strings.ToUpper(volumeType), volumeName, workenvId)
 
@@ -686,10 +705,16 @@ func resourceCloudVolumeUpdate(d *schema.ResourceData, meta interface{}) error {
 func resourceCloudVolumeDelete(d *schema.ResourceData, meta interface{}) error {
 	apis := meta.(*APIs)
 
-	volumeType, workenvId, svmName, volumeName, isHA, err := splitId(d.Id())
+	volumeID, err := ParseVolumeID(d.Id())
 	if err != nil {
 		return err
 	}
+
+	volumeType := volumeID.VolumeType
+	workenvId := volumeID.WorkEnvId
+	svmName := volumeID.SvmName
+	volumeName := volumeID.VolumeName
+	isHA := volumeID.IsHA
 
 	log.Printf("[INFO] Deleting %s volume %s for work env %s", strings.ToUpper(volumeType), volumeName, workenvId)
 
@@ -707,7 +732,7 @@ func resourceCloudVolumeDelete(d *schema.ResourceData, meta interface{}) error {
 				if netappErr.Error() == client.ErrResourceBusy {
 					log.Printf("[INFO] %s volume %s for work env %s is busy, waiting...", strings.ToUpper(volumeType), volumeName, workenvId)
 				} else {
-					return err
+					return fmt.Errorf("Error deleting volume %s from work env %s: %s", volumeName, workenvId, err)
 				}
 			}
 		} else {
@@ -718,11 +743,11 @@ func resourceCloudVolumeDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if requestId == "" {
-		return errors.New(client.ErrResourceBusy)
+		return fmt.Errorf("Error deleting volume %s from work env %s: resource busy", volumeName, workenvId)
 	}
 
 	if err := WaitForRequest(apis, requestId); err != nil {
-		return err
+		return fmt.Errorf("Error deleting volume %s from work env %s: %s", volumeName, workenvId, err)
 	}
 
 	log.Printf("[INFO] Volume %s deleted successfully", volumeName)
@@ -735,10 +760,15 @@ func resourceCloudVolumeDelete(d *schema.ResourceData, meta interface{}) error {
 func resourceCloudVolumeExists(d *schema.ResourceData, meta interface{}) (bool, error) {
 	apis := meta.(*APIs)
 
-	volumeType, workenvId, _, volumeName, isHA, err := splitId(d.Id())
+	volumeID, err := ParseVolumeID(d.Id())
 	if err != nil {
 		return false, err
 	}
+
+	volumeType := volumeID.VolumeType
+	workenvId := volumeID.WorkEnvId
+	volumeName := volumeID.VolumeName
+	isHA := volumeID.IsHA
 
 	log.Printf("[INFO] Checking if %s volume %s for work env %s exists", strings.ToUpper(volumeType), volumeName, workenvId)
 
@@ -756,8 +786,8 @@ func resourceCloudVolumeExists(d *schema.ResourceData, meta interface{}) (bool, 
 				return false, nil
 			}
 		}
-		log.Printf("[INFO] Error while reading %s volume %s for work env %s: %s", strings.ToUpper(volumeType), volumeName, workenvId, err)
-		return false, err
+
+		return false, fmt.Errorf("Error while reading %s volume %s for work env %s: %s", strings.ToUpper(volumeType), volumeName, workenvId, err)
 	}
 
 	log.Printf("[INFO] %s volume %s for work env %s exists", strings.ToUpper(volumeType), volumeName, workenvId)
@@ -780,11 +810,11 @@ func updateVolumeData(d *schema.ResourceData, apis *APIs, volumeType, workenvId,
 	}
 
 	if err != nil {
-		return err
+		return fmt.Errorf("Error modifying volume %s for work env %s: %s", volumeName, workenvId, err)
 	}
 
 	if err = WaitForRequest(apis, requestId); err != nil {
-		return err
+		return fmt.Errorf("Error waiting for modification of volume %s for work env %s: %s", volumeName, workenvId, err)
 	}
 
 	log.Printf("[INFO] Volume %s modified successfully", volumeName)
@@ -814,7 +844,7 @@ func updateVolumeTier(d *schema.ResourceData, meta interface{}, apis *APIs, volu
 	}
 
 	if err != nil {
-		return err
+		return fmt.Errorf("Error submitting volume quote for work env %s: %s", workenvId, err)
 	}
 
 	log.Printf("[DEBUG] Quote response: %s", util.ToString(quoteRes))
@@ -850,32 +880,14 @@ func updateVolumeTier(d *schema.ResourceData, meta interface{}, apis *APIs, volu
 	}
 
 	if err != nil {
-		return err
+		return fmt.Errorf("Error modifying tier for volume %s for work env %s: %s", volumeName, workenvId, err)
 	}
 
 	if err = WaitForRequest(apis, requestId); err != nil {
-		return err
+		return fmt.Errorf("Error waiting for tier modification of volume %s for work env %s: %s", volumeName, workenvId, err)
 	}
 
 	log.Printf("[INFO] Tier for volume %s modified successfully", volumeName)
 
 	return resourceCloudVolumeRead(d, meta)
-}
-
-func splitId(id string) (string, string, string, string, bool, error) {
-	parts := strings.Split(id, "/")
-	if len(parts) != 4 {
-		return "", "", "", "", false, fmt.Errorf("Invalid volume ID format: %s", id)
-	}
-
-	volumeType := parts[0]
-	workenvId := parts[1]
-	svmName := parts[2]
-	volumeName := parts[3]
-	isHA := false
-	if volumeType == "ha" {
-		isHA = true
-	}
-
-	return volumeType, workenvId, svmName, volumeName, isHA, nil
 }

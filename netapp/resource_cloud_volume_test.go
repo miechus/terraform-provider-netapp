@@ -20,7 +20,7 @@ func TestAccCloudVolume_nfs_vsa_basic(t *testing.T) {
 		CheckDestroy: testAccCheckCloudVolumeDestroy,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: FormatString(testAccCloudVolume_nfs_vsa_with_aggregate, envName),
+				Config: testAccCloudVolume_nfs_vsa_with_aggregate_config(envName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudVolumeExists("netapp_cloud_volume.vsa-nfs-volume", id),
 					resource.TestCheckResourceAttrSet(
@@ -67,7 +67,7 @@ func TestAccCloudVolume_nfs_vsa_data_change(t *testing.T) {
 		CheckDestroy: testAccCheckCloudVolumeDestroy,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: FormatString(testAccCloudVolume_nfs_vsa, envName),
+				Config: testAccCloudVolume_nfs_vsa_config(envName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudVolumeExists("netapp_cloud_volume.vsa-nfs-volume", id),
 					resource.TestCheckResourceAttr(
@@ -77,7 +77,7 @@ func TestAccCloudVolume_nfs_vsa_data_change(t *testing.T) {
 				),
 			},
 			resource.TestStep{
-				Config: FormatString(testAccCloudVolume_nfs_vsa_data_change, envName),
+				Config: testAccCloudVolume_nfs_vsa_data_change_config(envName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudVolumeExists("netapp_cloud_volume.vsa-nfs-volume", id),
 					resource.TestCheckResourceAttr(
@@ -100,7 +100,7 @@ func TestAccCloudVolume_nfs_awsha_basic(t *testing.T) {
 		CheckDestroy: testAccCheckCloudVolumeDestroy,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: FormatString(testAccCloudVolume_nfs_awsha, envName),
+				Config: testAccCloudVolume_nfs_awsha_config(envName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudVolumeExists("netapp_cloud_volume.awsha-nfs-volume", id),
 					resource.TestCheckResourceAttrSet(
@@ -145,7 +145,7 @@ func TestAccCloudVolume_nfs_awsha_data_change(t *testing.T) {
 		CheckDestroy: testAccCheckCloudVolumeDestroy,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: FormatString(testAccCloudVolume_nfs_awsha, envName),
+				Config: testAccCloudVolume_nfs_awsha_config(envName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudVolumeExists("netapp_cloud_volume.awsha-nfs-volume", id),
 					resource.TestCheckResourceAttr(
@@ -155,7 +155,7 @@ func TestAccCloudVolume_nfs_awsha_data_change(t *testing.T) {
 				),
 			},
 			resource.TestStep{
-				Config: FormatString(testAccCloudVolume_nfs_awsha_data_change, envName),
+				Config: testAccCloudVolume_nfs_awsha_data_change_config(envName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudVolumeExists("netapp_cloud_volume.awsha-nfs-volume", id),
 					resource.TestCheckResourceAttr(
@@ -178,7 +178,7 @@ func TestAccCloudVolume_cifs_vsa_basic(t *testing.T) {
 		CheckDestroy: testAccCheckCloudVolumeDestroy,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: FormatString(testAccCloudVolume_cifs_vsa, envName),
+				Config: testAccCloudVolume_cifs_vsa_config(envName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudVolumeExists("netapp_cloud_volume.vsa-cifs-volume", id),
 					resource.TestCheckResourceAttrSet(
@@ -231,7 +231,7 @@ func TestAccCloudVolume_cifs_vsa_data_change(t *testing.T) {
 		CheckDestroy: testAccCheckCloudVolumeDestroy,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: FormatString(testAccCloudVolume_cifs_vsa, envName),
+				Config: testAccCloudVolume_cifs_vsa_config(envName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudVolumeExists("netapp_cloud_volume.vsa-cifs-volume", id),
 					resource.TestCheckResourceAttr(
@@ -249,7 +249,7 @@ func TestAccCloudVolume_cifs_vsa_data_change(t *testing.T) {
 				),
 			},
 			resource.TestStep{
-				Config: FormatString(testAccCloudVolume_cifs_vsa_data_change, envName),
+				Config: testAccCloudVolume_cifs_vsa_data_change_config(envName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudVolumeExists("netapp_cloud_volume.vsa-cifs-volume", id),
 					resource.TestCheckResourceAttr(
@@ -280,7 +280,7 @@ func TestAccCloudVolume_cifs_awsha_basic(t *testing.T) {
 		CheckDestroy: testAccCheckCloudVolumeDestroy,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: FormatString(testAccCloudVolume_cifs_awsha, envName),
+				Config: testAccCloudVolume_cifs_awsha_config(envName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudVolumeExists("netapp_cloud_volume.awsha-cifs-volume", id),
 					resource.TestCheckResourceAttrSet(
@@ -333,7 +333,7 @@ func TestAccCloudVolume_cifs_awsha_data_change(t *testing.T) {
 		CheckDestroy: testAccCheckCloudVolumeDestroy,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: FormatString(testAccCloudVolume_cifs_awsha, envName),
+				Config: testAccCloudVolume_cifs_awsha_config(envName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudVolumeExists("netapp_cloud_volume.awsha-cifs-volume", id),
 					resource.TestCheckResourceAttr(
@@ -351,7 +351,7 @@ func TestAccCloudVolume_cifs_awsha_data_change(t *testing.T) {
 				),
 			},
 			resource.TestStep{
-				Config: FormatString(testAccCloudVolume_cifs_awsha_data_change, envName),
+				Config: testAccCloudVolume_cifs_awsha_data_change_config(envName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudVolumeExists("netapp_cloud_volume.awsha-cifs-volume", id),
 					resource.TestCheckResourceAttr(
@@ -417,10 +417,14 @@ func testAccCheckCloudVolumeExists(n string, id *string) resource.TestCheckFunc 
 }
 
 func getCloudVolume(apis *APIs, id string) (*workenv.VolumeResponse, error) {
-	_, workenvId, _, volumeName, isHA, err := splitId(id)
+	volumeID, err := ParseVolumeID(id)
 	if err != nil {
-		return nil, fmt.Errorf("Error splitting volume ID %s: %s", id, err)
+		return nil, err
 	}
+
+	workenvId := volumeID.WorkEnvId
+	volumeName := volumeID.VolumeName
+	isHA := volumeID.IsHA
 
 	var res *workenv.VolumeResponse
 	if isHA {
@@ -432,7 +436,8 @@ func getCloudVolume(apis *APIs, id string) (*workenv.VolumeResponse, error) {
 	return res, err
 }
 
-const testAccCloudVolume_nfs_vsa_with_aggregate = `
+func testAccCloudVolume_nfs_vsa_with_aggregate_config(envName string) string {
+	c := `
 data "netapp_cloud_working_environment" "vsa-workenv" {
   name = "%s"
 }
@@ -452,7 +457,11 @@ resource "netapp_cloud_volume" "vsa-nfs-volume" {
   deduplication = true
 }
 `
-const testAccCloudVolume_nfs_vsa = `
+	return FormatString(c, envName)
+}
+
+func testAccCloudVolume_nfs_vsa_config(envName string) string {
+	c := `
 data "netapp_cloud_working_environment" "vsa-workenv" {
   name = "%s"
 }
@@ -471,7 +480,11 @@ resource "netapp_cloud_volume" "vsa-nfs-volume" {
   deduplication = true
 }
 `
-const testAccCloudVolume_nfs_vsa_tier_change = `
+	return FormatString(c, envName)
+}
+
+func testAccCloudVolume_nfs_vsa_tier_change_config(envName string) string {
+	c := `
 data "netapp_cloud_working_environment" "vsa-workenv" {
   name = "%s"
 }
@@ -491,7 +504,11 @@ resource "netapp_cloud_volume" "vsa-nfs-volume" {
   deduplication = true
 }
 `
-const testAccCloudVolume_nfs_vsa_data_change = `
+	return FormatString(c, envName)
+}
+
+func testAccCloudVolume_nfs_vsa_data_change_config(envName string) string {
+	c := `
 data "netapp_cloud_working_environment" "vsa-workenv" {
   name = "%s"
 }
@@ -510,7 +527,11 @@ resource "netapp_cloud_volume" "vsa-nfs-volume" {
   deduplication = true
 }
 `
-const testAccCloudVolume_nfs_awsha = `
+	return FormatString(c, envName)
+}
+
+func testAccCloudVolume_nfs_awsha_config(envName string) string {
+	c := `
 data "netapp_cloud_working_environment" "awsha-workenv" {
   name = "%s"
 }
@@ -530,7 +551,11 @@ resource "netapp_cloud_volume" "awsha-nfs-volume" {
   deduplication = false
 }
 `
-const testAccCloudVolume_nfs_awsha_tier_change = `
+	return FormatString(c, envName)
+}
+
+func testAccCloudVolume_nfs_awsha_tier_change_config(envName string) string {
+	c := `
 data "netapp_cloud_working_environment" "awsha-workenv" {
   name = "%s"
 }
@@ -550,7 +575,11 @@ resource "netapp_cloud_volume" "awsha-nfs-volume" {
   deduplication = false
 }
 `
-const testAccCloudVolume_nfs_awsha_data_change = `
+	return FormatString(c, envName)
+}
+
+func testAccCloudVolume_nfs_awsha_data_change_config(envName string) string {
+	c := `
 data "netapp_cloud_working_environment" "awsha-workenv" {
   name = "%s"
 }
@@ -570,7 +599,11 @@ resource "netapp_cloud_volume" "awsha-nfs-volume" {
   deduplication = false
 }
 `
-const testAccCloudVolume_cifs_vsa = `
+	return FormatString(c, envName)
+}
+
+func testAccCloudVolume_cifs_vsa_config(envName string) string {
+	c := `
 data "netapp_cloud_working_environment" "vsa-workenv" {
   name = "%s"
 }
@@ -595,7 +628,11 @@ resource "netapp_cloud_volume" "vsa-cifs-volume" {
   deduplication = true
 }
 `
-const testAccCloudVolume_cifs_vsa_data_change = `
+	return FormatString(c, envName)
+}
+
+func testAccCloudVolume_cifs_vsa_data_change_config(envName string) string {
+	c := `
 data "netapp_cloud_working_environment" "vsa-workenv" {
   name = "%s"
 }
@@ -620,7 +657,11 @@ resource "netapp_cloud_volume" "vsa-cifs-volume" {
   deduplication = true
 }
 `
-const testAccCloudVolume_cifs_awsha = `
+	return FormatString(c, envName)
+}
+
+func testAccCloudVolume_cifs_awsha_config(envName string) string {
+	c := `
 data "netapp_cloud_working_environment" "awsha-workenv" {
   name = "%s"
 }
@@ -645,7 +686,11 @@ resource "netapp_cloud_volume" "awsha-cifs-volume" {
   deduplication = true
 }
 `
-const testAccCloudVolume_cifs_awsha_data_change = `
+	return FormatString(c, envName)
+}
+
+func testAccCloudVolume_cifs_awsha_data_change_config(envName string) string {
+	c := `
 data "netapp_cloud_working_environment" "awsha-workenv" {
   name = "%s"
 }
@@ -670,3 +715,5 @@ resource "netapp_cloud_volume" "awsha-cifs-volume" {
   deduplication = true
 }
 `
+	return FormatString(c, envName)
+}

@@ -3,6 +3,7 @@ package netapp
 import (
 	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/candidpartners/occm-sdk-go/api/workenv"
@@ -14,10 +15,45 @@ const RequestResolutionRetryCount = 60
 // amount of time to wait between retrying request resolution
 const RequestResolutionWaitTime = 2 * time.Second
 
+// Volume identifier
+type VolumeID struct {
+	VolumeType string
+	WorkEnvId  string
+	SvmName    string
+	VolumeName string
+	IsHA       bool
+}
+
+func ParseVolumeID(id string) (*VolumeID, error) {
+	parts := strings.Split(id, "/")
+	if len(parts) != 4 {
+		return nil, fmt.Errorf("Invalid volume ID format: %s", id)
+	}
+
+	volumeType := parts[0]
+	workenvId := parts[1]
+	svmName := parts[2]
+	volumeName := parts[3]
+	isHA := false
+	if volumeType == "ha" {
+		isHA = true
+	}
+
+	result := VolumeID{
+		VolumeType: volumeType,
+		WorkEnvId:  workenvId,
+		SvmName:    svmName,
+		VolumeName: volumeName,
+		IsHA:       isHA,
+	}
+
+	return &result, nil
+}
+
 func GetWorkingEnvironments(apis *APIs) ([]workenv.VsaWorkingEnvironment, error) {
 	resp, err := apis.WorkingEnvironmentAPI.GetWorkingEnvironments()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("Error retrieving working environments: %s", err)
 	}
 
 	return resp.VSA, nil
